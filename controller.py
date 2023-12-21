@@ -18,7 +18,13 @@ from typing import Tuple
 
 import smbus  # pylint: disable=import-error
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+# Configure logging
+logging.basicConfig(
+    stream=sys.stdout,
+    level=logging.DEBUG,
+    format="%(asctime)s.%(msecs)03dZ %(funcName)s():%(lineno)d %(levelname)s # %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%S",
+)
 logger: logging.Logger = logging.getLogger()
 
 # Hysteresis: 2 degrees?
@@ -56,7 +62,9 @@ CPU_TEMPERATURE_FILE = "/sys/class/thermal/thermal_zone0/temp"
 
 HIGHEST_BAND: int = len(BAND_SPEED) - 1
 CURRENT_BAND: int = 0
-CURRENT_TEMPERATURE: float = 0.0
+CURRENT_TEMPERATURE: int = 0
+
+DEGREE_SIGN: str = "\N{DEGREE SIGN}"
 
 # Create the I2C bus object
 SMBUS = smbus.SMBus(BUS_ID)
@@ -78,7 +86,7 @@ def set_fan_speed(band: int) -> None:
     CURRENT_BAND = band
 
 
-def get_cpu_temperature() -> float | None:
+def get_cpu_temperature() -> int | None:
     """Read the CPU temperature (from the system file).
     If it fails, or we read nothing we return None. The caller
     should assume the temperature is critical under this condition.
@@ -88,10 +96,10 @@ def get_cpu_temperature() -> float | None:
     if os.path.isfile(CPU_TEMPERATURE_FILE):
         with open(CPU_TEMPERATURE_FILE, "r", encoding="utf-8") as ct_file:
             milli_c = ct_file.readline().strip()
-        temperature: float = int(milli_c) / 1000.0
+        temperature: int = int(0.5 + int(milli_c) / 1000.0)
         if temperature != CURRENT_TEMPERATURE:
             CURRENT_TEMPERATURE = temperature
-            logging.info("Temperature is now %s", temperature)
+            logging.debug("%s%sC", temperature, DEGREE_SIGN)
         return temperature
     return None
 
@@ -151,11 +159,11 @@ def calculate_temperature_band(  # pylint: disable=too-many-branches
 
     assert 0 <= new_band <= HIGHEST_BAND
     if new_band != CURRENT_BAND:
-        msg: str = f"Temperature {temperature} - "
         if new_band > CURRENT_BAND:
-            msg += f"moving up from band {CURRENT_BAND} to {new_band}"
+            msg: str = "Moving up"
         else:
-            msg += f"moving down from band {CURRENT_BAND} to {new_band}"
+            msg = "Moving down"
+        msg += f" from band {CURRENT_BAND} to {new_band}"
         logging.info(msg)
 
     return new_band
