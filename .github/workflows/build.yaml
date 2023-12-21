@@ -22,4 +22,5 @@ jobs:
         pip install --upgrade pip
         pip install poetry==1.7.1
         poetry export --without-hashes --with dev --output requirements.txt
+        pip install --requirement requirements.txt
         pre-commit run --all-files
