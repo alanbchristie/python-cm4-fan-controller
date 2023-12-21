@@ -1,4 +1,16 @@
 # Python CM4 Fan Controller
+
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/alanbchristie/python-cm4-fan-controller)
+
+[![build](https://github.com/alanbchristie/python-cm4-fan-controller/actions/workflows/build.yaml/badge.svg)](https://github.com/alanbchristie/python-cm4-fan-controller/actions/workflows/build.yaml)
+
+[![License](http://img.shields.io/badge/license-Apache%202.0-blue.svg?style=flat)](https://github.com/alanbchristie/python-cm4-fan-controller/blob/master/LICENSE.txt)
+
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://conventionalcommits.org)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+[![Packaged with Poetry](https://img.shields.io/badge/packaging-poetry-cyan.svg)](https://python-poetry.org/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 A temperature-based fan controller for the Compute Module 4 IO board.
 
 ## Contributing
