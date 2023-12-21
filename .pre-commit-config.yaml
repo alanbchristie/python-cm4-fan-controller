@@ -53,6 +53,11 @@ repos:
   rev: v3.0.3
   hooks:
   - id: pylint
+# YAML Lint
+- repo: https://github.com/adrienverge/yamllint
+  rev: v1.33.0
+  hooks:
+  - id: yamllint
 # Poetry
 - repo: https://github.com/python-poetry/poetry
   rev: '1.7.1'

@@ -1,0 +1,25 @@
+---
+name: build
+
+on:
+  push:
+  schedule:
+    # Build every Saturday at 4:30pm
+    - cron: 30 16 * * 6
+
+jobs:
+  static-analysis:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Pre-commit (all files)
+      run: |
+        pip install --upgrade pip
+        pip install poetry==1.7.0
+        poetry export --without-hashes --without dev --output requirements.txt
+        pre-commit run --all-files
