@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "python-cm4-fan-controller"
+version = "0.1.0"
+description = "A temperature-based fan controller for the Compute Module 4 IO board"
+authors = ["Alan Christie <alan.christie@matildapeak.com>"]
+license = "Apache License 2.0"
+readme = "README.md"
+packages = [{include = "python_cm4_fan_controller"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.6.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
