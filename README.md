@@ -34,6 +34,26 @@ of your clone with: -
 
     pre-commit run --all-files
 
+## Installation
+You typically run the controller as a systemd service on the CM IO board.
+The repository contains an example service file that you can use as a template.
+
+Clone the repository to your CM4 IO board and install the service file: -
+
+    git clone https://github.com/alanbchristie/python-cm4-fan-controller
+    cd python-cm4-fan-controller
+
+Edit the `cm4-fan-controller.service` file to suite your needs and then install it: -
+
+    sudo cp cm4-fan-controller.service /lib/systemd/system
+    sudo chmod 644 /lib/systemd/system/cm4-fan-controller.service
+    sudo systemctl daemon-reload
+    sudo systemctl enable cm4-fan-controller.service
+
+And then reboot the CM4 to make suer the service starts automatically on boot.
+
+    sudo reboot
+
 ---
 
 [black]: https://black.readthedocs.io/en/stable/

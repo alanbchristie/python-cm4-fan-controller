@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "python-cm4-fan-controller"
-version = "0.1.0"
+version = "1.0.0"
 description = "A temperature-based fan controller for the Compute Module 4 IO board"
 authors = ["Alan Christie <alan.christie@matildapeak.com>"]
 license = "Apache License 2.0"
