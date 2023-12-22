@@ -4,7 +4,7 @@ After=multi-user.target
 
 [Service]
 Type=idle
-ExecStart=/usr/bin/python /home/alan/python-cm4-fan-controller/controller.py
+ExecStart=/home/alan/python-cm4-fan-controller/controller.py
 WorkingDirectory=/home/alan/python-cm4-fan-controller
 Restart=always
 RestartSec=5s
