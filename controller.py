@@ -173,8 +173,21 @@ def calculate_temperature_band(  # pylint: disable=too-many-branches,too-many-st
     return new_band
 
 
-# At startup always start the fan for the highest band
 logging.info("Running...")
+
+logging.info("MEASUREMENT_INTERVAL_S=%s seconds", MEASUREMENT_INTERVAL_S)
+logging.info("HYSTERESIS=%s%sC", HYSTERESIS, DEGREE_SIGN)
+logging.info("TEMPERATURE_POINT_1=%s%sC", TEMPERATURE_POINT_1, DEGREE_SIGN)
+logging.info("TEMPERATURE_POINT_2=%s%sC", TEMPERATURE_POINT_2, DEGREE_SIGN)
+logging.info("TEMPERATURE_POINT_3=%s%sC", TEMPERATURE_POINT_3, DEGREE_SIGN)
+logging.info("TEMPERATURE_POINT_4=%s%sC", TEMPERATURE_POINT_4, DEGREE_SIGN)
+logging.info("BAND_0_SPEED=%s%%", BAND_SPEED[0])
+logging.info("BAND_1_SPEED=%s%%", BAND_SPEED[1])
+logging.info("BAND_2_SPEED=%s%%", BAND_SPEED[2])
+logging.info("BAND_3_SPEED=%s%%", BAND_SPEED[3])
+logging.info("BAND_4_SPEED=%s%%", BAND_SPEED[4])
+
+# At startup always start the fan for the highest band
 set_fan_speed(HIGHEST_BAND)
 
 # Now periodically monitor the temperature
