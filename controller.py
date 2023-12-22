@@ -25,13 +25,13 @@ import smbus  # pylint: disable=import-error
 # the fan goes to 100% at 70 degrees or greater
 # and remains at 100% until the temperature
 # drops to 68 degrees (or less)
-HYSTERESIS: int = int(os.environ.get("HYSTERESIS", "2"))
+HYSTERESIS: int = int(os.environ.get("HYSTERESIS", "3"))
 
-LOGGING_LEVEL: str = os.environ.get("LOGGING_LEVEL", "DEBUG")
+LOGGING_LEVEL: str = os.environ.get("LOGGING_LEVEL", "INFO")
 
 MEASUREMENT_INTERVAL_S: int = int(os.environ.get("MEASUREMENT_INTERVAL_S", "8"))
 
-TEMPERATURE_POINT_1: int = int(os.environ.get("TEMPERATURE_POINT_1", "35"))
+TEMPERATURE_POINT_1: int = int(os.environ.get("TEMPERATURE_POINT_1", "40"))
 TEMPERATURE_POINT_2: int = int(os.environ.get("TEMPERATURE_POINT_1", "60"))
 TEMPERATURE_POINT_3: int = int(os.environ.get("TEMPERATURE_POINT_1", "65"))
 TEMPERATURE_POINT_4: int = int(os.environ.get("TEMPERATURE_POINT_1", "70"))
