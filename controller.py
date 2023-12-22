@@ -12,20 +12,13 @@ The fastest speed while remaining quiet is about 70 (27%).
 """
 import logging
 import os
+import re
 import sys
+import subprocess
 import time
 from typing import Tuple
 
 import smbus  # pylint: disable=import-error
-
-# Configure logging
-logging.basicConfig(
-    stream=sys.stdout,
-    level=logging.DEBUG,
-    format="%(asctime)s.%(msecs)03dZ %(funcName)s():%(lineno)d %(levelname)s # %(message)s",
-    datefmt="%Y-%m-%dT%H:%M:%S",
-)
-logger: logging.Logger = logging.getLogger()
 
 # Hysteresis: 2 degrees?
 # So if the trigger for point 4 is 70 degrees
@@ -33,6 +26,10 @@ logger: logging.Logger = logging.getLogger()
 # and remains at 100% until the temperature
 # drops to 68 degrees (or less)
 HYSTERESIS: int = int(os.environ.get("HYSTERESIS", "2"))
+
+LOGGING_LEVEL: str = os.environ.get("LOGGING_LEVEL", "DEBUG")
+
+MEASUREMENT_INTERVAL_S: int = int(os.environ.get("MEASUREMENT_INTERVAL_S", "8"))
 
 TEMPERATURE_POINT_1: int = int(os.environ.get("TEMPERATURE_POINT_1", "35"))
 TEMPERATURE_POINT_2: int = int(os.environ.get("TEMPERATURE_POINT_1", "60"))
@@ -47,27 +44,29 @@ BAND_SPEED: Tuple[int, int, int, int, int] = (
     int(os.environ.get("BAND_3_SPEED", "75")),
     int(os.environ.get("BAND_4_SPEED", "100")),
 )
-
-MEASUREMENT_INTERVAL_S: int = int(os.environ.get("MEASUREMENT_INTERVAL_S", "8"))
+HIGHEST_BAND: int = len(BAND_SPEED) - 1
 
 # Hardware details of the fan controller
 # Bus ID of 10 implies the device /dev/i2c-10 (port I2C10)
 BUS_ID: int = 10
+DEGREE_SIGN: str = "\N{DEGREE SIGN}"
 FAN_ADDR = 0x2F
 FAN_CONTROL_COMMAND = 0x30
 
-# The CPU temperature is written to a sys file.
-# It's value is milli-degrees Celsius.
-CPU_TEMPERATURE_FILE = "/sys/class/thermal/thermal_zone0/temp"
-
-HIGHEST_BAND: int = len(BAND_SPEED) - 1
+# A record of the current fan speed band
 CURRENT_BAND: int = 0
-CURRENT_TEMPERATURE: int = 0
-
-DEGREE_SIGN: str = "\N{DEGREE SIGN}"
 
 # Create the I2C bus object
 SMBUS = smbus.SMBus(BUS_ID)
+
+# Configure logging
+logging.basicConfig(
+    stream=sys.stdout,
+    level=logging.getLevelName(LOGGING_LEVEL),
+    format="%(asctime)s.%(msecs)03dZ %(funcName)s():%(lineno)d %(levelname)s # %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%S",
+)
+logger: logging.Logger = logging.getLogger()
 
 
 def set_fan_speed(band: int) -> None:
@@ -86,20 +85,14 @@ def set_fan_speed(band: int) -> None:
     CURRENT_BAND = band
 
 
-def get_cpu_temperature() -> int | None:
-    """Read the CPU temperature (from the system file).
-    If it fails, or we read nothing we return None. The caller
-    should assume the temperature is critical under this condition.
+def get_cpu_temperature() -> float | None:
+    """Read the CPU temperature, returning the value
+    as a rounded integer if it can be found.
     """
-    global CURRENT_TEMPERATURE  # pylint: disable=global-statement
-
-    if os.path.isfile(CPU_TEMPERATURE_FILE):
-        with open(CPU_TEMPERATURE_FILE, "r", encoding="utf-8") as ct_file:
-            milli_c = ct_file.readline().strip()
-        temperature: int = int(0.5 + int(milli_c) / 1000.0)
-        if temperature != CURRENT_TEMPERATURE:
-            CURRENT_TEMPERATURE = temperature
-            logging.debug("%s%sC", temperature, DEGREE_SIGN)
+    output = subprocess.check_output(["vcgencmd", "measure_temp"]).decode()
+    if match := re.search("temp=([\d\.]+)'C", output):
+        temperature: float = float(match[1])
+        logging.debug("%s%sC", temperature, DEGREE_SIGN)
         return temperature
     return None
 
