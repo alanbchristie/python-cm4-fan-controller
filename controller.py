@@ -13,8 +13,8 @@ The fastest speed while remaining quiet is about 70 (27%).
 import logging
 import os
 import re
-import sys
 import subprocess
+import sys
 import time
 from typing import Tuple
 
@@ -53,7 +53,7 @@ DEGREE_SIGN: str = "\N{DEGREE SIGN}"
 FAN_ADDR = 0x2F
 FAN_CONTROL_COMMAND = 0x30
 
-# A record of the current fan speed band
+# A record of the current fan speed band
 CURRENT_BAND: int = 0
 
 # Create the I2C bus object
@@ -90,14 +90,14 @@ def get_cpu_temperature() -> float | None:
     as a rounded integer if it can be found.
     """
     output = subprocess.check_output(["vcgencmd", "measure_temp"]).decode()
-    if match := re.search("temp=([\d\.]+)'C", output):
+    if match := re.search(r"temp=([\d\.]+)'C", output):
         temperature: float = float(match[1])
         logging.debug("%s%sC", temperature, DEGREE_SIGN)
         return temperature
     return None
 
 
-def calculate_temperature_band(  # pylint: disable=too-many-branches
+def calculate_temperature_band(  # pylint: disable=too-many-branches,too-many-statements
     temperature: float,
 ) -> int:
     """Calculate the new temperature band, given the temperature.
@@ -135,7 +135,9 @@ def calculate_temperature_band(  # pylint: disable=too-many-branches
         elif temperature >= TEMPERATURE_POINT_4:
             new_band = 4
         # Do we need to move to a lower band?
-        if temperature <= TEMPERATURE_POINT_2 - HYSTERESIS:
+        if temperature <= TEMPERATURE_POINT_1 - HYSTERESIS:
+            new_band = 0
+        elif temperature <= TEMPERATURE_POINT_2 - HYSTERESIS:
             new_band = 1
 
     elif CURRENT_BAND == 3:
@@ -144,11 +146,23 @@ def calculate_temperature_band(  # pylint: disable=too-many-branches
             new_band = 4
             return 100
         # Do we need to move to a lower band?
-        if temperature <= TEMPERATURE_POINT_3 - HYSTERESIS:
+        if temperature <= TEMPERATURE_POINT_1 - HYSTERESIS:
+            new_band = 0
+        elif temperature <= TEMPERATURE_POINT_2 - HYSTERESIS:
+            new_band = 1
+        elif temperature <= TEMPERATURE_POINT_3 - HYSTERESIS:
             new_band = 2
 
-    elif temperature <= TEMPERATURE_POINT_4 - HYSTERESIS:
-        new_band = 3
+    else:
+        # Band 4 - the highest band
+        if temperature <= TEMPERATURE_POINT_1 - HYSTERESIS:
+            new_band = 0
+        elif temperature <= TEMPERATURE_POINT_2 - HYSTERESIS:
+            new_band = 1
+        elif temperature <= TEMPERATURE_POINT_3 - HYSTERESIS:
+            new_band = 2
+        elif temperature <= TEMPERATURE_POINT_4 - HYSTERESIS:
+            new_band = 3
 
     assert 0 <= new_band <= HIGHEST_BAND
     if new_band != CURRENT_BAND:
@@ -160,6 +174,7 @@ def calculate_temperature_band(  # pylint: disable=too-many-branches
 
 
 # At startup always start the fan for the highest band
+logging.info("Running...")
 set_fan_speed(HIGHEST_BAND)
 
 # Now periodically monitor the temperature
