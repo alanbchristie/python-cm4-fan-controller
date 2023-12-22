@@ -3,11 +3,12 @@ Description=Python CM4 Fan Controller
 After=multi-user.target
 
 [Service]
-Type=simple
-WorkingDirectory=/home/alan/python-cm4-fan-controller/
-ExecStart=sudo python controller.py
-KillSignal=SIGINT
-Restart=on-failure
+Type=idle
+ExecStart=/usr/bin/python /home/alan/python-cm4-fan-controller/controller.py
+WorkingDirectory=/home/alan/python-cm4-fan-controller
+Restart=always
+RestartSec=5s
+User=alan
 
 [Install]
 WantedBy=multi-user.target
