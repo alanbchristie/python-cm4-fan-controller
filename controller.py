@@ -159,10 +159,7 @@ def calculate_temperature_band(  # pylint: disable=too-many-branches
 
     assert 0 <= new_band <= HIGHEST_BAND
     if new_band != CURRENT_BAND:
-        if new_band > CURRENT_BAND:
-            msg: str = "Moving up"
-        else:
-            msg = "Moving down"
+        msg = "Moving up" if new_band > CURRENT_BAND else "Moving down"
         msg += f" from band {CURRENT_BAND} to {new_band}"
         logging.info(msg)
 
