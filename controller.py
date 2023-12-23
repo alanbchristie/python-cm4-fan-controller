@@ -56,6 +56,8 @@ FAN_ADDR = 0x2F
 FAN_CONTROL_COMMAND = 0x30
 MINIMUM_TEMPERATURE_POINT_VALUE: int = 30
 MINIMUM_FAN_SPEED_PERCENT: int = 0
+MINIMUM_INTERVAL_S: int = 4
+MAXIMUM_INTERVAL_S: int = 60
 
 # A record of the current fan speed band
 CURRENT_BAND: int = 0
@@ -243,6 +245,51 @@ if BAND_SPEED[4] < BAND_SPEED[3]:
         "BAND_SPEED[4] too low (%d%%) - setting to %d", BAND_SPEED[4], BAND_SPEED[3]
     )
     BAND_SPEED[4] = BAND_SPEED[3]
+
+# Check hysteresis (must be less than the minimum width of the bands).
+SMALLEST_BAND_WIDTH: int = MINIMUM_TEMPERATURE_POINT_VALUE
+if TEMPERATURE_POINT_2 - TEMPERATURE_POINT_1 < SMALLEST_BAND_WIDTH:
+    SMALLEST_BAND_WIDTH = TEMPERATURE_POINT_2 - TEMPERATURE_POINT_1
+elif TEMPERATURE_POINT_3 - TEMPERATURE_POINT_2 < SMALLEST_BAND_WIDTH:
+    SMALLEST_BAND_WIDTH = TEMPERATURE_POINT_3 - TEMPERATURE_POINT_2
+elif TEMPERATURE_POINT_4 - TEMPERATURE_POINT_3 < SMALLEST_BAND_WIDTH:
+    SMALLEST_BAND_WIDTH = TEMPERATURE_POINT_4 - TEMPERATURE_POINT_3
+# We must have a minimum bandwidth of 5 degrees if hysteresis is going to make any sense.
+if HYSTERESIS > SMALLEST_BAND_WIDTH - 2:
+    CHOSEN_HYSTERESIS: int = 2 if SMALLEST_BAND_WIDTH >= 5 else 0
+    logger.warning(
+        "HYSTERESIS too high (%d%s), and your smallest band is %d%s - setting to %d",
+        HYSTERESIS,
+        DEGREE_SIGN,
+        SMALLEST_BAND_WIDTH,
+        DEGREE_SIGN,
+        CHOSEN_HYSTERESIS,
+    )
+    HYSTERESIS = CHOSEN_HYSTERESIS
+
+# Correct measurement interval (there is a minium and a maximum).
+if MEASUREMENT_INTERVAL_S < MINIMUM_INTERVAL_S:
+    logger.warning(
+        "MEASUREMENT_INTERVAL_S too low (%d seconds) - setting to %d",
+        MEASUREMENT_INTERVAL_S,
+        MINIMUM_INTERVAL_S,
+    )
+    MEASUREMENT_INTERVAL_S = MINIMUM_INTERVAL_S
+elif MEASUREMENT_INTERVAL_S > MAXIMUM_INTERVAL_S:
+    logger.warning(
+        "MEASUREMENT_INTERVAL_S too high (%d seconds) - setting to %d",
+        MEASUREMENT_INTERVAL_S,
+        MAXIMUM_INTERVAL_S,
+    )
+    MEASUREMENT_INTERVAL_S = MAXIMUM_INTERVAL_S
+
+# Check logging level
+if LOGGING_LEVEL not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
+    logger.warning("LOGGING_LEVEL not recognised (%s) - setting to INFO", LOGGING_LEVEL)
+    LOGGING_LEVEL = "INFO"
+
+# OK - go!
+#      ---
 
 logging.info("MEASUREMENT_INTERVAL_S=%d seconds", MEASUREMENT_INTERVAL_S)
 logging.info("HYSTERESIS=%d%s", HYSTERESIS, DEGREE_SIGN)
