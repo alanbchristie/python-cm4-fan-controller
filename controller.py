@@ -16,7 +16,7 @@ import re
 import subprocess
 import sys
 import time
-from typing import Tuple
+from typing import List
 
 import smbus  # pylint: disable=import-error
 
@@ -31,19 +31,21 @@ LOGGING_LEVEL: str = os.environ.get("LOGGING_LEVEL", "INFO")
 
 MEASUREMENT_INTERVAL_S: int = int(os.environ.get("MEASUREMENT_INTERVAL_S", "8"))
 
+# The 4 temperature point,
+# These values define the temperature values for the fan speed bands.
 TEMPERATURE_POINT_1: int = int(os.environ.get("TEMPERATURE_POINT_1", "40"))
 TEMPERATURE_POINT_2: int = int(os.environ.get("TEMPERATURE_POINT_1", "60"))
 TEMPERATURE_POINT_3: int = int(os.environ.get("TEMPERATURE_POINT_1", "65"))
 TEMPERATURE_POINT_4: int = int(os.environ.get("TEMPERATURE_POINT_1", "70"))
 
-# A tuple of band speeds (as a percent of full speed).
-BAND_SPEED: Tuple[int, int, int, int, int] = (
+# A tuple of 5 band speeds (as a percent of full speed).
+BAND_SPEED: List[int] = [
     int(os.environ.get("BAND_0_SPEED", "0")),
     int(os.environ.get("BAND_1_SPEED", "25")),
     int(os.environ.get("BAND_2_SPEED", "50")),
     int(os.environ.get("BAND_3_SPEED", "75")),
     int(os.environ.get("BAND_4_SPEED", "100")),
-)
+]
 HIGHEST_BAND: int = len(BAND_SPEED) - 1
 
 # Hardware details of the fan controller
@@ -52,6 +54,8 @@ BUS_ID: int = 10
 DEGREE_SIGN: str = "\N{DEGREE SIGN}"
 FAN_ADDR = 0x2F
 FAN_CONTROL_COMMAND = 0x30
+MINIMUM_TEMPERATURE_POINT_VALUE: int = 30
+MINIMUM_FAN_SPEED_PERCENT: int = 0
 
 # A record of the current fan speed band
 CURRENT_BAND: int = 0
@@ -175,17 +179,88 @@ def calculate_temperature_band(  # pylint: disable=too-many-branches,too-many-st
 
 logging.info("Running...")
 
-logging.info("MEASUREMENT_INTERVAL_S=%s seconds", MEASUREMENT_INTERVAL_S)
-logging.info("HYSTERESIS=%s%sC", HYSTERESIS, DEGREE_SIGN)
-logging.info("TEMPERATURE_POINT_1=%s%sC", TEMPERATURE_POINT_1, DEGREE_SIGN)
-logging.info("TEMPERATURE_POINT_2=%s%sC", TEMPERATURE_POINT_2, DEGREE_SIGN)
-logging.info("TEMPERATURE_POINT_3=%s%sC", TEMPERATURE_POINT_3, DEGREE_SIGN)
-logging.info("TEMPERATURE_POINT_4=%s%sC", TEMPERATURE_POINT_4, DEGREE_SIGN)
-logging.info("BAND_0_SPEED=%s%%", BAND_SPEED[0])
-logging.info("BAND_1_SPEED=%s%%", BAND_SPEED[1])
-logging.info("BAND_2_SPEED=%s%%", BAND_SPEED[2])
-logging.info("BAND_3_SPEED=%s%%", BAND_SPEED[3])
-logging.info("BAND_4_SPEED=%s%%", BAND_SPEED[4])
+# Correct temperature points.
+# There's a minimum and they must be ordered.
+if TEMPERATURE_POINT_1 < MINIMUM_TEMPERATURE_POINT_VALUE:
+    logger.warning(
+        "TEMPERATURE_POINT_1 too low (%d%s) - setting to %d",
+        TEMPERATURE_POINT_1,
+        DEGREE_SIGN,
+        MINIMUM_TEMPERATURE_POINT_VALUE,
+    )
+    TEMPERATURE_POINT_1 = MINIMUM_TEMPERATURE_POINT_VALUE
+if TEMPERATURE_POINT_2 < TEMPERATURE_POINT_1:
+    logger.warning(
+        "TEMPERATURE_POINT_2 too low (%d%s) - setting to %d",
+        TEMPERATURE_POINT_2,
+        DEGREE_SIGN,
+        TEMPERATURE_POINT_1,
+    )
+    TEMPERATURE_POINT_2 = TEMPERATURE_POINT_1
+if TEMPERATURE_POINT_3 < TEMPERATURE_POINT_2:
+    logger.warning(
+        "TEMPERATURE_POINT_3 too low (%d%s) - setting to %d",
+        TEMPERATURE_POINT_3,
+        DEGREE_SIGN,
+        TEMPERATURE_POINT_2,
+    )
+    TEMPERATURE_POINT_3 = TEMPERATURE_POINT_2
+if TEMPERATURE_POINT_4 < TEMPERATURE_POINT_3:
+    logger.warning(
+        "TEMPERATURE_POINT_4 too low (%d%s) - setting to %d",
+        TEMPERATURE_POINT_4,
+        DEGREE_SIGN,
+        TEMPERATURE_POINT_3,
+    )
+    TEMPERATURE_POINT_4 = TEMPERATURE_POINT_3
+
+# Correct band speeds.
+# There's a minimum and they must be ordered.
+if BAND_SPEED[0] < MINIMUM_FAN_SPEED_PERCENT:
+    logger.warning(
+        "BAND_SPEED[0] too low (%d%%) - setting to %d",
+        BAND_SPEED[0],
+        MINIMUM_FAN_SPEED_PERCENT,
+    )
+    BAND_SPEED[0] = MINIMUM_FAN_SPEED_PERCENT
+if BAND_SPEED[1] < BAND_SPEED[0]:
+    logger.warning(
+        "BAND_SPEED[1] too low (%d%%) - setting to %d", BAND_SPEED[1], BAND_SPEED[0]
+    )
+    BAND_SPEED[1] = BAND_SPEED[0]
+if BAND_SPEED[2] < BAND_SPEED[1]:
+    logger.warning(
+        "BAND_SPEED[2] too low (%d%%) - setting to %d", BAND_SPEED[2], BAND_SPEED[1]
+    )
+    BAND_SPEED[2] = BAND_SPEED[1]
+if BAND_SPEED[3] < BAND_SPEED[2]:
+    logger.warning(
+        "BAND_SPEED[3] too low (%d%%) - setting to %d", BAND_SPEED[3], BAND_SPEED[2]
+    )
+    BAND_SPEED[3] = BAND_SPEED[2]
+if BAND_SPEED[4] < BAND_SPEED[3]:
+    logger.warning(
+        "BAND_SPEED[4] too low (%d%%) - setting to %d", BAND_SPEED[4], BAND_SPEED[3]
+    )
+    BAND_SPEED[4] = BAND_SPEED[3]
+
+logging.info("MEASUREMENT_INTERVAL_S=%d seconds", MEASUREMENT_INTERVAL_S)
+logging.info("HYSTERESIS=%d%s", HYSTERESIS, DEGREE_SIGN)
+logging.info(
+    "TEMPERATURE_POINTS (degrees celsius) %d|%d|%d|%d",
+    TEMPERATURE_POINT_1,
+    TEMPERATURE_POINT_2,
+    TEMPERATURE_POINT_3,
+    TEMPERATURE_POINT_4,
+)
+logging.info(
+    "BAND_SPEEDS (percent) %d|%d|%d|%d|%d",
+    BAND_SPEED[0],
+    BAND_SPEED[1],
+    BAND_SPEED[2],
+    BAND_SPEED[3],
+    BAND_SPEED[4],
+)
 
 # At startup always start the fan for the highest band
 set_fan_speed(HIGHEST_BAND)
