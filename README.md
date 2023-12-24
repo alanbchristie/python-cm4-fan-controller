@@ -11,7 +11,7 @@
 [![Packaged with Poetry](https://img.shields.io/badge/packaging-poetry-cyan.svg)](https://python-poetry.org/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-A temperature-based fan controller for the Compute Module 4 IO board.
+A temperature-based fan controller for the Compute Module 4 (CM4) IO board.
 
 ## Contributing
 The project uses: -
@@ -33,6 +33,17 @@ Now the project's rules will run on every commit, and you can check the current 
 of your clone with: -
 
     pre-commit run --all-files
+
+## Hardware
+This code is designed to tun on the CM4 IO board where, according to the
+[CM4 IO Board datasheet], to enable the I2C bus to the fan controller,
+you will need `dtparam=i2c_vc=on` set in your `/boot/config.txt`.
+The fan controller will then be on i2c-10 at the 7-bit address 0x2f.
+
+The fan I'm using is a Waveshare, part number [CM4-FAN-3007-12V].
+
+The practical fan speed range (found empirically) is between between 45 (18%)
+and 255 (100%). The fastest speed while still remaining quiet is about 70 (27%).
 
 ## Installation
 You typically run the controller as a systemd service on the CM IO board.
@@ -59,5 +70,7 @@ And then reboot the CM4 to make suer the service starts automatically on boot.
 [black]: https://black.readthedocs.io/en/stable/
 [commitizen]: https://commitizen-tools.github.io/commitizen/
 [conventional commit]: https://www.conventionalcommits.org/en/v1.0.0/
+[cm4 datasheet]: https://datasheets.raspberrypi.com/cm4io/cm4io-datasheet.pdf
+[CM4-FAN-3007-12V]: https://www.waveshare.com/cm4-fan-3007.htm
 [isort]: https://pycqa.github.io/isort/
 [pre-commit]: https://pre-commit.com
