@@ -36,7 +36,7 @@ of your clone with: -
 
 ## Hardware
 This code is designed to tun on the CM4 IO board where, according to the
-[CM4 IO Board datasheet], to enable the I2C bus to the fan controller,
+[CM4 datasheet], to enable the I2C bus to the fan controller,
 you will need `dtparam=i2c_vc=on` set in your `/boot/config.txt`.
 The fan controller will then be on i2c-10 at the 7-bit address 0x2f.
 
