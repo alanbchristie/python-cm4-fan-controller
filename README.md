@@ -43,7 +43,9 @@ The fan controller will then be on i2c-10 at the 7-bit address 0x2f.
 The fan I'm using is a Waveshare, part number [CM4-FAN-3007-12V].
 
 The practical fan speed range (found empirically) is between between 45 (18%)
-and 255 (100%). The fastest speed while still remaining quiet is about 70 (27%).
+and 255 (100%). The fastest speed while still remaining quiet, i.e. the
+fastest speed that isn't considered distractingly noisy when running within a
+couple of feet of the user, is about 70 (27%).
 
 ## Installation
 You typically run the controller as a systemd service on the CM IO board.
